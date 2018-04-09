@@ -69,7 +69,7 @@ int main() {
 	    // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
         // remember the core timer runs at half the CPU speed
         double lps = 1000; //hz of the LED
-        double delaynum = (CLOCKTIME/2)/lps; //converts clock cycels to hz
+        double delaynum = (CLOCKTIME/4)/lps; //converts clock cycels to hz
         _CP0_SET_COUNT(0);
         while(_CP0_GET_COUNT() < delaynum){
             if(!PORTBbits.RB4){
