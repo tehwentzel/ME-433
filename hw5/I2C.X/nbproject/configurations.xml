@@ -19,12 +19,7 @@
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-    <itemPath>../hw5/I2C.X/i2c_master_noint.c</itemPath>
-    <itemPath>../hw5/I2C.X/i2c_master_noint.h</itemPath>
   </logicalFolder>
-  <sourceRootList>
-    <Elem>../hw5/I2C.X</Elem>
-  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -170,9 +165,6 @@
         <property key="save-temps" value="false"/>
         <property key="wpo-lto" value="false"/>
       </C32Global>
-      <PICkit3PlatformTool>
-        <property key="firmware.download.all" value="false"/>
-      </PICkit3PlatformTool>
     </conf>
   </confs>
 </configurationDescriptor>

@@ -3,12 +3,12 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>SPI</name>
-            <creation-uuid>070d8be7-bedf-44f9-bac8-4f4fd1dce1fe</creation-uuid>
+            <name>I2C</name>
+            <creation-uuid>881910b0-3990-4287-8001-8c54e452b566</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
-            <header-extensions>h</header-extensions>
+            <header-extensions/>
             <asminc-extensions/>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>

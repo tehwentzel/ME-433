@@ -1,6 +1,6 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-#include<math.h>
+#include "i2c_master_noint.c"
 
 // DEVCFG0
 #pragma config DEBUG = 0b11 // no debugging
@@ -37,47 +37,43 @@
 #pragma config FUSBIDIO = 1 // USB pins controlled by USB module
 #pragma config FVBUSONIO = 1 // USB BUSON controlled by USB module
 
-#define CLOCKTIME 40000000 // 40000 yields 0.001 s delay time when using Core Timer
-#define CS LATAbits.LATA0 //A0 is the chip-select pin
+#define DELAYTIME 4800000 // 40000 yields 0.001 s delay time when using Core Timer
+#define SLAVE 0b0100000 // format is 0b0100<A2><A1><A0> --> all address pins are grounded
 
-void init_spi() {
-    SPI1CON = 0;              // turn off the spi module and reset it
-    SPI1BUF;                  // clear the rx buffer by reading from it
-    SPI1BRG = 0X1;            // baud rate
-    CS = 0; // sets CS to high/off
-    RPA1Rbits.RPA1R = 0b0011; //A1R is an output connected to SDI
-    SPI1CONbits.MSTEN = 1;  //
-    SPI1STATbits.SPIROV = 0;  // clear the overflow bit
-    SPI1CONbits.CKE = 1;      // data changes when clock goes from hi to lo (since CKP is 0)
-    SPI1CONbits.MSTEN = 1;    // master operation
-    SPI1CONbits.ON = 1;       // turn on spi 41
-    return;
+void initExpander() {
+    i2c_master_setup(); // setup I2C2 at 100 kHz
+
+    // init GP0-3 as outputs
+    i2c_master_start(); // START bit
+    i2c_master_send(SLAVE << 1);  // hardware address; RW (lsb) = 0, indicates write
+    i2c_master_send(0x00);  // specify address to write to: 0x00 = IODIR
+    i2c_master_send(0xF0);  // send value byte to address specified above
+                        // a value of 0xF0 makes GP0-3 outputs and 4-7 inputs.
+    i2c_master_stop();  // STOP bit
 }
 
-unsigned char spi1_io(unsigned char w){
-  ///write a character to SPI1 Buffer
-    SPI1BUF = w;
-    while(!SPI1STATbits.SPIRBF){
-        ;  //this is the equivalent of pass, wats for write to occur
-    }
-    return SPI1BUF;
+void setExpander(char pin, char level) { // write to expander
+    i2c_master_start();
+    i2c_master_send(SLAVE << 1); // hardware address and write bit
+    i2c_master_send(0x0A); // OLAT port
+    i2c_master_send(level << pin); // write "level" (hi/lo) to "pin"
+    i2c_master_stop();
 }
 
-void set_voltage(unsigned char channel, unsigned int voltage){
-    unsigned char lsb;
-    unsigned char msb;
-    
-    CS = 0; //turn on DAC
-    lsb = voltage << 4;
-    msb = ((channel << 7) | (0b111 << 4) | (voltage >> 4));
-    spi1_io(msb);
-    spi1_io(lsb);
-    CS = 1; //turn off
-    return;
+char getExpander() {
+    char level;
+    i2c_master_start();
+    i2c_master_send((SLAVE << 1)); // hardware address and write bit
+    i2c_master_send(0x09);  // GPIO port
+    i2c_master_restart(); // this line is REALLY important!
+    i2c_master_send((SLAVE << 1) | 1); // hardware address and 1 in lsb
+    level = i2c_master_recv(); // receive a byte from the slave
+    i2c_master_ack(1); // send NACK to slave
+    i2c_master_stop();
+    return level;
 }
 
 int main() {
-
     __builtin_disable_interrupts();
 
     // set the CP0 CONFIG register to indicate that kseg0 is cacheable (0x3)
@@ -92,39 +88,30 @@ int main() {
     // disable JTAG to get pins back
     DDPCONbits.JTAGEN = 0;
 
+    // Turn off AN2 and AN3 pins (make B2 and B3 available for I2C)
+    ANSELBbits.ANSB2 = 0; //SDA
+    ANSELBbits.ANSB3 = 0;//SCL
+
     // do your TRIS and LAT commands here
-    TRISAbits.TRISA4 = 0; // Pin 4 of Port A is LED1. Clear bit 
+    TRISAbits.TRISA0 = 0; // Chip Select
+    TRISAbits.TRISA1 = 1; // SDOI
+    TRISAbits.TRISA4 = 0; // Pin 4 of Port A is LED1 (output)
     TRISBbits.TRISB4 = 1; // Pin 4 of Port B is USER button (input)
-    TRISAbits.TRISA0 = 0;
-    TRISAbits.TRISA1 = 1;
-    // TRISA = 0x00;
-    LATAbits.LATA4 = 1; // Turn LED1 ON
+    LATAbits.LATA4 = 0; // LED from original assignment - off
+
+    initExpander();
+    setExpander(0,0); // turn on LED connected to GP0
 
     __builtin_enable_interrupts();
-    init_spi();
+
     _CP0_SET_COUNT(0);
-    
-    int x = 0;
-    int delaynum = CLOCKTIME/4000;
-    int period = 400/3;
-    int amp = 256/2;
-    double tri_x;
+    while(_CP0_GET_COUNT() < DELAYTIME) {} // wait 1 second
     while(1) {
-        
-	    // channel 0 is a sign wave
-        _CP0_SET_COUNT(0);
-        while(_CP0_GET_COUNT() < delaynum){
-            ;//delay
+        LATAbits.LATA4 = 1; // turn on LED1; USER button is low (FALSE) if pressed.
+        setExpander(0,0); // set pin 0 in expander to low <-- the LED
+        while(!(getExpander()>>7)) { // button is on GP7, so shift 7 bits to the right.  button is wired low when pressed
+            setExpander(0,1); // Turn on the led in GP0
         }
-        
-        double sinval = amp + amp*sin(x*2*3.14159/period) - 1;
-        set_voltage(0,sinval);
-        
-        double trival = (2*amp - 1)*abs(period - x)/period;
-        set_voltage(1,trival);
-        
-        x = (x+1)%(2*period);
     }
     return 0;
 }
-
