@@ -54,13 +54,56 @@ void delay(double seconds){
     while(_CP0_GET_COUNT() < (DELAYTIME * seconds)){ ; }
 }
 
-void drawVects(signed short xval, signed short yval){ //function to draw the acceleration vectors from the center
-    short maxLen = MAX_X/2 - 10; //length of a full bar --> 2gs
-    int width = 4;
-    short xcurr = MAX_X/2;
-    short ycurr = MAX_Y/2;
-    if(xval > 0){
-        ;
+void clearBars(int xlen, int ylen){
+    int xpos;
+    int ypos;
+    if(xlen > 0){
+        xpos = MAX_X/2;
+        ypos = MAX_Y/2 - 2;
+        while(xpos < MAX_X/2 + xlen){
+            while(ypos < MAX_Y/2 + 2){
+                LCD_drawPixel(xpos,ypos, COLORBAR);
+                ypos++;
+            }
+            ypos = MAX_Y/2 - 2;
+            xpos++;
+        }
+    }
+    if(xlen < 0){
+        xpos = MAX_X/2;
+        ypos = MAX_Y/2 - 2;
+        while(xpos > MAX_X/2 + xlen){
+            while(ypos < MAX_Y/2 + 2){
+                LCD_drawPixel(xpos,ypos, COLORBAR);
+                ypos++;
+            }
+            ypos = MAX_Y/2 - 2;
+            xpos--;
+        }
+    }
+    if(ylen < 0){
+        xpos = MAX_X/2 - 2;
+        ypos = MAX_Y/2;
+        while(ypos > MAX_Y/2 + ylen){
+            while(xpos < MAX_X/2 + 2){
+                LCD_drawPixel(xpos,ypos, COLORBAR);
+                xpos++;
+            }
+            xpos = MAX_X/2 - 2;
+            ypos--;
+        }
+    }
+    if(ylen > 0){
+        xpos = MAX_X/2 - 2;
+        ypos = MAX_Y/2;
+        while(ypos < MAX_Y/2 + ylen){
+            while(xpos < MAX_X/2 + 2){
+                LCD_drawPixel(xpos,ypos, COLORBAR);
+                xpos++;
+            }
+            xpos = MAX_X/2 - 2;
+            ypos++;
+        }
     }
 }
 
@@ -139,7 +182,6 @@ int main() {
     unsigned char data[14];
     drawBars(48);
     while(1){
-        drawBars(3);
         read_imu_data(data, 14);
         signed short temperature = getTemp(data);
         signed short gyroX = getCoord(data, XGPOS);
@@ -151,6 +193,7 @@ int main() {
         //LCD_clearScreen(COLOROFF);
         
         if(accelX < 0){
+            clearBars(-10,0);
             unsigned short color = COLORHIGH;
             int xpos = MAX_X/2 + 2;
             int ypos = MAX_Y/2 -2;
@@ -169,6 +212,7 @@ int main() {
             }
         }
         if(accelX > 0){
+            clearBars(10,0);
             unsigned short color = COLORHIGH;
             int xpos = MAX_X/2 - 2;
             int ypos = MAX_Y/2 -2;
@@ -187,6 +231,7 @@ int main() {
             }
         }
         if(accelY < 0){
+            clearBars(0,-10);
             unsigned short color = COLORHIGH;
             int xpos = MAX_X/2 - 2;
             int ypos = MAX_Y/2 + 2;
@@ -205,6 +250,7 @@ int main() {
             }
         }
         if(accelY > 0){
+            clearBars(0,10);
             unsigned short color = COLORHIGH;
             int xpos = MAX_X/2 - 2;
             int ypos = MAX_Y/2 - 2;
@@ -229,7 +275,7 @@ int main() {
         int val = getXL(data,XXLPOS)/2;
         sprintf(msg_buffer, "Z %d", val);
         draw_string(10,10, msg_buffer);
-        delay(.1);
+        delay(.01);
     }
     return 0;
 }
