@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>I2C</name>
-            <creation-uuid>881910b0-3990-4287-8001-8c54e452b566</creation-uuid>
+            <name>hw7</name>
+            <creation-uuid>04bca6c8-0119-4c7e-95dc-d5dc85950721</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>

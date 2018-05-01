@@ -1,6 +1,6 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
-#include "i2c_master_noint.c"
+#include "i2c_master_noint.h"
 
 // DEVCFG0
 #pragma config DEBUG = 0b11 // no debugging
@@ -65,7 +65,7 @@ char getExpander() {
     i2c_master_start();
     i2c_master_send((SLAVE << 1)); // hardware address and write bit
     i2c_master_send(0x09);  // GPIO port
-    i2c_master_restart(); // this line is REALLY important!
+    i2c_master_restart(); //
     i2c_master_send((SLAVE << 1) | 1); // hardware address and 1 in lsb
     level = i2c_master_recv(); // receive a byte from the slave
     i2c_master_ack(1); // send NACK to slave
@@ -90,7 +90,7 @@ int main() {
 
     // Turn off AN2 and AN3 pins (make B2 and B3 available for I2C)
     ANSELBbits.ANSB2 = 0; //SDA
-    ANSELBbits.ANSB3 = 0;//SCL
+    ANSELBbits.ANSB3 = 0; //SCL
 
     // do your TRIS and LAT commands here
     TRISAbits.TRISA0 = 0; // Chip Select
