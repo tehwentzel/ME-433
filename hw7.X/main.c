@@ -272,8 +272,10 @@ int main() {
         draw_string(85, 85, msg_buffer);
         sprintf(msg_buffer, "Y %d", accelY);
         draw_string(70, 30, msg_buffer);
-        int val = getXL(data,XXLPOS)/2;
-        sprintf(msg_buffer, "Z %d", val);
+        float d = 0.0;
+        d = accelZ;
+        int zval = d/1600.0;
+        sprintf(msg_buffer, "Z %d", zval);
         draw_string(10,10, msg_buffer);
         delay(.01);
     }
