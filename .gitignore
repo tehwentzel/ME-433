@@ -52,3 +52,9 @@ Mkfile.old
 dkms.conf
 
 ME433_2018/*
+HW18/CAD/*
+
+#CAD files
+*.bak
+*.dwg
+*.dxf
